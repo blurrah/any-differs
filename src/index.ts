@@ -1,8 +1,28 @@
 import "https://deno.land/x/dotenv/load.ts";
-import { convertUsdtToEur, getBtcRate, hasBtcAlternative } from "./utils.ts";
+import { hasBtcAlternative } from "./utils.ts";
 import BigNumber from "https://esm.sh/bignumber.js";
+import { Notification } from "https://deno.land/x/deno_notify@1.0.1/ts/mod.ts";
+import * as Colors from "https://deno.land/std/fmt/colors.ts";
 
 import type { BinancePrice, Result } from "./types.d.ts";
+
+const output = (results: Result) => {
+  Object.entries(results).forEach(([name, market]) => {
+    if (market.delta.toNumber() > 1 || market.delta.toNumber() < -1) {
+      console.log(
+        Colors.underline(
+          Colors.blue(`${name} -> Delta: ${market.delta.toString()}`)
+        )
+      );
+
+      // Send notification
+      new Notification()
+        .title(`Delta found for market ${name}`)
+        .body(`Delta is ${market.delta.toString()}`)
+        .show();
+    }
+  });
+};
 
 const main = async () => {
   const response = await fetch("https://api.bitvavo.com/v2/ticker/price");
@@ -17,12 +37,7 @@ const main = async () => {
   const btcEur = new BigNumber(
     binanceData.find((item) => item.symbol === "BTCEUR")?.price ?? ""
   );
-  const usdtEur = binanceData.find((item) => item.symbol === "EURUSDT")?.price;
-
-  console.log("---- action is coming ---");
-  // convertBtcToEur();
-  const btcRate = await getBtcRate();
-  console.log(btcRate.toString());
+  // const usdtEur = binanceData.find((item) => item.symbol === "EURUSDT")?.price;
 
   /**
    * Create aggregation of data
@@ -41,10 +56,10 @@ const main = async () => {
 
       const semiPrice = bitvavoPrice.minus(binancePrice);
 
-      agg[name] = {
-        bitvavoPrice: bitvavoPrice.toString(),
-        binancePrice: binancePrice.toString(),
-        delta: semiPrice.div(bitvavoPrice).toString(),
+      agg[item.market] = {
+        bitvavoPrice: bitvavoPrice,
+        binancePrice: binancePrice,
+        delta: semiPrice.div(bitvavoPrice),
         converted: false,
       };
       return agg;
@@ -61,10 +76,10 @@ const main = async () => {
 
       const semiPrice = bitvavoPrice.minus(convertedBinancePrice);
 
-      agg[name] = {
-        bitvavoPrice: bitvavoPrice.toString(),
-        binancePrice: convertedBinancePrice.toString(),
-        delta: semiPrice.div(bitvavoPrice).toString(),
+      agg[item.market] = {
+        bitvavoPrice: bitvavoPrice,
+        binancePrice: convertedBinancePrice,
+        delta: semiPrice.div(bitvavoPrice),
         converted: true,
       };
       return agg;
@@ -73,8 +88,10 @@ const main = async () => {
 
     return agg;
   }, {});
+  output(result);
 
   return result;
 };
 
+// Run application
 main();

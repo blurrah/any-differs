@@ -1,8 +1,10 @@
+import BigNumber from "https://esm.sh/bignumber.js";
+
 export type Result = {
   [market: string]: {
-    bitvavoPrice: string;
-    binancePrice: string;
-    delta: string;
+    bitvavoPrice: BigNumber;
+    binancePrice: BigNumber;
+    delta: BigNumber;
     converted: boolean;
   };
 };
