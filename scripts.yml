@@ -1,0 +1,12 @@
+allow:
+  - net
+  - read
+  - env
+  - ffi
+  - write
+
+scripts:
+  start:
+    desc: Runs differ
+    cmd: src/index.ts
+    unstable: true

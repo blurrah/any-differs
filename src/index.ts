@@ -1,10 +1,11 @@
 import "https://deno.land/x/dotenv/load.ts";
 import { hasBtcAlternative } from "./utils.ts";
 import BigNumber from "https://esm.sh/bignumber.js";
-import { Notification } from "https://deno.land/x/deno_notify@1.0.1/ts/mod.ts";
+
 import * as Colors from "https://deno.land/std/fmt/colors.ts";
 
 import type { BinancePrice, Result } from "./types.d.ts";
+import { send } from "./notifications/native.ts";
 
 const output = (results: Result) => {
   Object.entries(results).forEach(([name, market]) => {
@@ -16,10 +17,10 @@ const output = (results: Result) => {
       );
 
       // Send notification
-      new Notification()
-        .title(`Delta found for market ${name}`)
-        .body(`Delta is ${market.delta.toString()}`)
-        .show();
+      send({
+        title: `${name} difference found`,
+        message: `Delta of ${market.delta.toString()} found`,
+      });
     }
   });
 };

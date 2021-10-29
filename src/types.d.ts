@@ -13,3 +13,8 @@ export type BinancePrice = {
   symbol: string;
   price: string;
 };
+
+export type NotificationMessage = {
+  title: string;
+  message: string;
+};
