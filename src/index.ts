@@ -4,10 +4,12 @@ import BigNumber from "https://esm.sh/bignumber.js";
 
 import * as Colors from "https://deno.land/std/fmt/colors.ts";
 
-import type { BinancePrice, Result } from "./types.d.ts";
+import type { BinancePrice, NotificationMessage, Result } from "./types.d.ts";
 import { send } from "./notifications/native.ts";
+import { sendDiscord } from "./notifications/discord.ts";
 
 const output = (results: Result) => {
+  const messages: NotificationMessage[] = [];
   Object.entries(results).forEach(([name, market]) => {
     if (market.delta.toNumber() > 1 || market.delta.toNumber() < -1) {
       console.log(
@@ -15,14 +17,19 @@ const output = (results: Result) => {
           Colors.blue(`${name} -> Delta: ${market.delta.toString()}`)
         )
       );
+      messages.push({
+        title: name,
+        message: market.delta.toPrecision(5),
+      });
 
       // Send notification
       send({
         title: `${name} difference found`,
-        message: `Delta of ${market.delta.toString()} found`,
+        message: `Delta of ${market.delta.toPrecision(5)} found`,
       });
     }
   });
+  sendDiscord(messages);
 };
 
 const main = async () => {
